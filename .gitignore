@@ -1,0 +1,6 @@
+*.ini
+*.json
+*.txt
+schema/
+data/
+log/
