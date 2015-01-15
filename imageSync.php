@@ -47,8 +47,8 @@ $dbh = new PDO($DB['DSN'],$DB['DB_USER'], $DB['DB_PWD'],
 	PDO::ATTR_PERSISTENT => false));
 $ItemInfoDB = new ItemInfo($dbh);
 $FILEPATH = "./data/";
-$TARGETPATH = "/mnt/librick/";
-$THUMBPATH = "/mnt/librick/thumb/";
+$TARGETPATH = "/mnt/file.librick.com/";
+$THUMBPATH = "/mnt/file.librick.com/thumb/";
 $title = 'Librick 圖片上傳通知';
 $FolderArray = $MyGoogleDrive->FindFolderID("title='imageSync' and mimeType = 'application/vnd.google-apps.folder'");
 if(count($FolderArray) == 1)					# ensure the folder is only one
