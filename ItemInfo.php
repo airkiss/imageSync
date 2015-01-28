@@ -54,7 +54,7 @@ class ItemInfo {
 	{
 		try {
 			if($isFirst)
-				$p = $this->dbh->prepare("update item_info set image_no = concat(:image_no,',',image_no) where id=:id");
+				$p = $this->dbh->prepare("update item_info set image_no = concat(:image_no,',') where id=:id");
 			else
 				$p = $this->dbh->prepare("update item_info set image_no = concat(image_no,',',:image_no) where id=:id");
 			$p->execute(array('id'=>$librick_id,'image_no'=>$image_no));
