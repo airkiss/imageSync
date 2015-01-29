@@ -144,24 +144,15 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 				$numArray = $ItemInfoDB->ReadDB($librick_id);
 				if($numArray['max'] != -1)	//No Error
 				{
-					if($numArray['title'] == false)	// title no setup
-					{
-						$newFileName = $librick_id.'_'.$matches[3].$matches[4];
-						if($numArray['max'] == 0)
-							$ItemInfoDB->AddImageNo($librick_id,$matches[3]);
-						else
-						{
-							if($matches[3] == 1)	//title setup
-								$ItemInfoDB->UpdateImageNo($librick_id,$matches[3],true);
-							else
-								$ItemInfoDB->UpdateImageNo($librick_id,$matches[3]);
-						}
-					}
+					$newFileName = $librick_id.'_'.$matches[3].$matches[4];
+					if($numArray['max'] == 0)
+						$ItemInfoDB->AddImageNo($librick_id,$matches[3]);
 					else
 					{
-						$image_no = $numArray['max'] + 1;
-						$newFileName = $librick_id.'_'.$image_no.$matches[4];
-						$ItemInfoDB->UpdateImageNo($librick_id,$image_no);
+						if($matches[3] == 1)	//title setup
+							$ItemInfoDB->UpdateImageNo($librick_id,$matches[3],true);
+						else
+							$ItemInfoDB->UpdateImageNo($librick_id,$matches[3]);
 					}
 					rename($FILEPATH.$fileObj->originalFilename,$FILEPATH.$newFileName);
 					ConvertThumb($FILEPATH,$FILEPATH."thumb/",$newFileName);
