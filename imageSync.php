@@ -39,6 +39,24 @@ function ConvertThumb($originPath,$targetPath,$base_name)
 	$img->destroy(); 
 }
 
+function ConvertThumb2($originPath,$targetPath,$base_name)
+{
+	$filename = $originPath . $base_name;
+	$filename2 = $targetPath . $base_name;
+	$img = new Imagick($filename);
+	$w = $img->getImageWidth();
+	$h = $img->getImageHeight();
+	if($w > 70 or $h > 70)
+	{
+		$img->scaleImage(70,70,true);
+	}
+	$img->setImageCompression(Imagick::COMPRESSION_JPEG); 
+	$img->setImageCompressionQuality(80);
+	$img->stripImage();
+	$img->writeImage($filename2);
+	$img->destroy(); 
+}
+
 CheckLock($argv[0]);
 $MyGoogleDrive = new MyGoogleDrive();
 $notify = new SendNotify($debug);
@@ -49,6 +67,7 @@ $ItemInfoDB = new ItemInfo($dbh);
 $FILEPATH = "./data/";
 $TARGETPATH = "/mnt/file.librick.com/";
 $THUMBPATH = "/mnt/file.librick.com/thumb/";
+$THUMBPATH2 = "/mnt/file.librick.com/miniThumb/";
 $title = 'Librick 圖片上傳通知';
 $FolderArray = $MyGoogleDrive->FindFolderID("title='imageSync' and mimeType = 'application/vnd.google-apps.folder'");
 if(count($FolderArray) == 1)					# ensure the folder is only one
@@ -156,8 +175,10 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					}
 					rename($FILEPATH.$fileObj->originalFilename,$FILEPATH.$newFileName);
 					ConvertThumb($FILEPATH,$FILEPATH."thumb/",$newFileName);
+					ConvertThumb2($FILEPATH,$FILEPATH."thumb2/",$newFileName);
 					rename($FILEPATH.$newFileName,$TARGETPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb/'.$newFileName,$THUMBPATH.$itemFolder.$newFileName);
+					rename($FILEPATH.'thumb2/'.$newFileName,$THUMBPATH2.$itemFolder.$newFileName);
 					$message.='成功。';
 					if($MyGoogleDrive->DeleteFileInFolder($folderId,$fileItem->id))
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除成功。' . "\n";
@@ -202,8 +223,10 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					}
 					rename($FILEPATH.$fileObj->originalFilename,$FILEPATH.$newFileName);
 					ConvertThumb($FILEPATH,$FILEPATH."thumb/",$newFileName);
+					ConvertThumb2($FILEPATH,$FILEPATH."thumb2/",$newFileName);
 					rename($FILEPATH.$newFileName,$TARGETPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb/'.$newFileName,$THUMBPATH.$itemFolder.$newFileName);
+					rename($FILEPATH.'thumb2/'.$newFileName,$THUMBPATH2.$itemFolder.$newFileName);
 					$message.='成功。';
 					if($MyGoogleDrive->DeleteFileInFolder($folderId,$fileItem->id))
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除成功。' . "\n";
@@ -248,8 +271,10 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					}
 					rename($FILEPATH.$fileObj->originalFilename,$FILEPATH.$newFileName);
 					ConvertThumb($FILEPATH,$FILEPATH."thumb/",$newFileName);
+					ConvertThumb2($FILEPATH,$FILEPATH."thumb2/",$newFileName);
 					rename($FILEPATH.$newFileName,$TARGETPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb/'.$newFileName,$THUMBPATH.$itemFolder.$newFileName);
+					rename($FILEPATH.'thumb2/'.$newFileName,$THUMBPATH2.$itemFolder.$newFileName);
 					$message.='成功。';
 					if($MyGoogleDrive->DeleteFileInFolder($folderId,$fileItem->id))
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除成功。' . "\n";
@@ -294,8 +319,10 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					}
 					rename($FILEPATH.$fileObj->originalFilename,$FILEPATH.$newFileName);
 					ConvertThumb($FILEPATH,$FILEPATH."thumb/",$newFileName);
+					ConvertThumb2($FILEPATH,$FILEPATH."thumb2/",$newFileName);
 					rename($FILEPATH.$newFileName,$TARGETPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb/'.$newFileName,$THUMBPATH.$itemFolder.$newFileName);
+					rename($FILEPATH.'thumb2/'.$newFileName,$THUMBPATH2.$itemFolder.$newFileName);
 					$message.='成功。';
 					if($MyGoogleDrive->DeleteFileInFolder($folderId,$fileItem->id))
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除成功。' . "\n";
@@ -340,8 +367,10 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					}
 					rename($FILEPATH.$fileObj->originalFilename,$FILEPATH.$newFileName);
 					ConvertThumb($FILEPATH,$FILEPATH."thumb/",$newFileName);
+					ConvertThumb2($FILEPATH,$FILEPATH."thumb2/",$newFileName);
 					rename($FILEPATH.$newFileName,$TARGETPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb/'.$newFileName,$THUMBPATH.$itemFolder.$newFileName);
+					rename($FILEPATH.'thumb2/'.$newFileName,$THUMBPATH2.$itemFolder.$newFileName);
 					$message.='成功。';
 					if($MyGoogleDrive->DeleteFileInFolder($folderId,$fileItem->id))
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除成功。' . "\n";
@@ -386,8 +415,10 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					}
 					rename($FILEPATH.$fileObj->originalFilename,$FILEPATH.$newFileName);
 					ConvertThumb($FILEPATH,$FILEPATH."thumb/",$newFileName);
+					ConvertThumb2($FILEPATH,$FILEPATH."thumb2/",$newFileName);
 					rename($FILEPATH.$newFileName,$TARGETPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb/'.$newFileName,$THUMBPATH.$itemFolder.$newFileName);
+					rename($FILEPATH.'thumb2/'.$newFileName,$THUMBPATH2.$itemFolder.$newFileName);
 					$message.='成功。';
 					if($MyGoogleDrive->DeleteFileInFolder($folderId,$fileItem->id))
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除成功。' . "\n";

@@ -15,6 +15,21 @@ class ItemInfo {
 	{
 		
 	}
+
+	function getItemInfo()
+	{
+		try {
+			$p = $this->dbh->prepare("select id,item_type,image_no from item_info where 
+					item_type not in ('Boxes','Instructions') order by length(image_no)");
+			$p->execute();	
+			$resData = $p->fetchAll(PDO::FETCH_OBJ);
+			return $resData;
+		} catch (PDOException $e) {
+			error_log('['.date('Y-m-d H:i:s').'] '.__METHOD__.' Error: ('.$e->getLine().') ' . $e->getMessage()."\n",3,"./log/ItemInfo.txt");
+			return null;
+		}
+	}
+
 	function ReadDB($librick_id)
 	{
 		try {
