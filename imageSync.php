@@ -70,6 +70,7 @@ $THUMBPATH = "/mnt/file.librick.com/thumb/";
 $THUMBPATH2 = "/mnt/file.librick.com/miniThumb/";
 $title = 'Librick 圖片上傳通知';
 $FolderArray = $MyGoogleDrive->FindFolderID("title='imageSync' and mimeType = 'application/vnd.google-apps.folder'");
+$output = "";
 if(count($FolderArray) == 1)					# ensure the folder is only one
 {
 	$folderId = $FolderArray[0]->id;			# retrieve the folder id 
@@ -104,11 +105,13 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 				else
 					echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除失敗。' . "\n";
 			}
+			
+
+			$output .= '['.date('Y-m-d H:i:s').'] '. $fileObj->originalFilename.'不符格式 JPG。' . "\n";
 			echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '. $fileObj->originalFilename.'不符格式 JPG。' . "\n";
 			unset($fileObj);
 			continue;	// No Match
 		}
-		// Todo regexp expression need to confirm
 		$filename = strtolower($fileObj->originalFilename);
 		preg_match('/^([^_]*)_(.*)_([0-9]*)(.*)$/',$filename,$matches);
 		if(!isset($matches[1]) and !isset($matches[2]) and !isset($matches[3]) and !isset($matches[4])) {
@@ -124,6 +127,7 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 				else
 					echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除失敗。' . "\n";
 			}
+			$output .= '['.date('Y-m-d H:i:s').'] '. $fileObj->originalFilename.'不符格式。' . "\n";
 			echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename.'不符格式。' . "\n";
 			unset($fileObj);
 			continue;	// No Match
@@ -142,6 +146,7 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 				else
 					echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除失敗。' . "\n";
 			}
+			$output .= '['.date('Y-m-d H:i:s').'] '. $fileObj->originalFilename.'不符格式。' . "\n";
 			echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename.'副檔名不符格式。' . "\n";
 			unset($fileObj);
 			continue;	// No Match
@@ -158,7 +163,7 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					break;
 				}
 				file_put_contents($FILEPATH.$fileObj->originalFilename,$data);
-				$message = '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 偵測到有'. $fileObj->originalFilename . '，準備更新至S3->';
+				$text = '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 偵測到有'. $fileObj->originalFilename . '，準備更新至S3->';
 				$librick_id = $matches[1] . '_' . $matches[2];
 				$numArray = $ItemInfoDB->ReadDB($librick_id);
 				if($numArray['max'] != -1)	//No Error
@@ -179,14 +184,14 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					rename($FILEPATH.$newFileName,$TARGETPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb/'.$newFileName,$THUMBPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb2/'.$newFileName,$THUMBPATH2.$itemFolder.$newFileName);
-					$message.='成功。';
+					$text.='成功。';
 					if($MyGoogleDrive->DeleteFileInFolder($folderId,$fileItem->id))
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除成功。' . "\n";
 					else
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除失敗。' . "\n";
 				}
-				else $message.='失敗。';
-				echo $message."\n";
+				else $text.='失敗。';
+				echo $text."\n";
 				break;
 			case 'b':	//Boxes
 				$itemFolder = 'Boxes/';
@@ -197,29 +202,20 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					break;
 				}
 				file_put_contents($FILEPATH.$fileObj->originalFilename,$data);
-				$message = '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 偵測到有'. $fileObj->originalFilename . '，準備更新至S3->';
+				$text = '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 偵測到有'. $fileObj->originalFilename . '，準備更新至S3->';
 				$librick_id = $matches[1] . '_' . $matches[2];
 				$numArray = $ItemInfoDB->ReadDB($librick_id);
 				if($numArray['max'] != -1)	//No Error
 				{
-					if($numArray['title'] == false)	// title no setup
-					{
-						$newFileName = $librick_id.'_'.$matches[3].$matches[4];
-						if($numArray['max'] == 0)
-							$ItemInfoDB->AddImageNo($librick_id,$matches[3]);
-						else
-						{
-							if($matches[3] == 1)	//title setup
-								$ItemInfoDB->UpdateImageNo($librick_id,$matches[3],true);
-							else
-								$ItemInfoDB->UpdateImageNo($librick_id,$matches[3]);
-						}
-					}
+					$newFileName = $librick_id.'_'.$matches[3].$matches[4];
+					if($numArray['max'] == 0)
+						$ItemInfoDB->AddImageNo($librick_id,$matches[3]);
 					else
 					{
-						$image_no = $numArray['max'] + 1;
-						$newFileName = $librick_id.'_'.$image_no.$matches[4];
-						$ItemInfoDB->UpdateImageNo($librick_id,$image_no);
+						if($matches[3] == 1)	//title setup
+							$ItemInfoDB->UpdateImageNo($librick_id,$matches[3],true);
+						else
+							$ItemInfoDB->UpdateImageNo($librick_id,$matches[3]);
 					}
 					rename($FILEPATH.$fileObj->originalFilename,$FILEPATH.$newFileName);
 					ConvertThumb($FILEPATH,$FILEPATH."thumb/",$newFileName);
@@ -227,14 +223,14 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					rename($FILEPATH.$newFileName,$TARGETPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb/'.$newFileName,$THUMBPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb2/'.$newFileName,$THUMBPATH2.$itemFolder.$newFileName);
-					$message.='成功。';
+					$text.='成功。';
 					if($MyGoogleDrive->DeleteFileInFolder($folderId,$fileItem->id))
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除成功。' . "\n";
 					else
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除失敗。' . "\n";
 				}
-				else $message.='失敗。';
-				echo $message."\n";
+				else $text.='失敗。';
+				echo $text."\n";
 				break;
 			case 'm':	//Minifigs
 				$itemFolder = 'Minifigs/';
@@ -245,29 +241,20 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					break;
 				}
 				file_put_contents($FILEPATH.$fileObj->originalFilename,$data);
-				$message = '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 偵測到有'. $fileObj->originalFilename . '，準備更新至S3->';
+				$text = '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 偵測到有'. $fileObj->originalFilename . '，準備更新至S3->';
 				$librick_id = $matches[1] . '_' . $matches[2];
 				$numArray = $ItemInfoDB->ReadDB($librick_id);
 				if($numArray['max'] != -1)	//No Error
 				{
-					if($numArray['title'] == false)	// title no setup
-					{
-						$newFileName = $librick_id.'_'.$matches[3].$matches[4];
-						if($numArray['max'] == 0)
-							$ItemInfoDB->AddImageNo($librick_id,$matches[3]);
-						else
-						{
-							if($matches[3] == 1)	//title setup
-								$ItemInfoDB->UpdateImageNo($librick_id,$matches[3],true);
-							else
-								$ItemInfoDB->UpdateImageNo($librick_id,$matches[3]);
-						}
-					}
+					$newFileName = $librick_id.'_'.$matches[3].$matches[4];
+					if($numArray['max'] == 0)
+						$ItemInfoDB->AddImageNo($librick_id,$matches[3]);
 					else
 					{
-						$image_no = $numArray['max'] + 1;
-						$newFileName = $librick_id.'_'.$image_no.$matches[4];
-						$ItemInfoDB->UpdateImageNo($librick_id,$image_no);
+						if($matches[3] == 1)	//title setup
+							$ItemInfoDB->UpdateImageNo($librick_id,$matches[3],true);
+						else
+							$ItemInfoDB->UpdateImageNo($librick_id,$matches[3]);
 					}
 					rename($FILEPATH.$fileObj->originalFilename,$FILEPATH.$newFileName);
 					ConvertThumb($FILEPATH,$FILEPATH."thumb/",$newFileName);
@@ -275,14 +262,14 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					rename($FILEPATH.$newFileName,$TARGETPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb/'.$newFileName,$THUMBPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb2/'.$newFileName,$THUMBPATH2.$itemFolder.$newFileName);
-					$message.='成功。';
+					$text.='成功。';
 					if($MyGoogleDrive->DeleteFileInFolder($folderId,$fileItem->id))
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除成功。' . "\n";
 					else
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除失敗。' . "\n";
 				}
-				else $message.='失敗。';
-				echo $message."\n";
+				else $text.='失敗。';
+				echo $text."\n";
 				break;
 			case 'g':	//Gears
 				$itemFolder = 'Gears/';
@@ -293,29 +280,20 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					break;
 				}
 				file_put_contents($FILEPATH.$fileObj->originalFilename,$data);
-				$message = '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 偵測到有'. $fileObj->originalFilename . '，準備更新至S3。';
+				$text = '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 偵測到有'. $fileObj->originalFilename . '，準備更新至S3。';
 				$librick_id = $matches[1] . '_' . $matches[2];
 				$numArray = $ItemInfoDB->ReadDB($librick_id);
 				if($numArray['max'] != -1)	//No Error
 				{
-					if($numArray['title'] == false)	// title no setup
-					{
-						$newFileName = $librick_id.'_'.$matches[3].$matches[4];
-						if($numArray['max'] == 0)
-							$ItemInfoDB->AddImageNo($librick_id,$matches[3]);
-						else
-						{
-							if($matches[3] == 1)	//title setup
-								$ItemInfoDB->UpdateImageNo($librick_id,$matches[3],true);
-							else
-								$ItemInfoDB->UpdateImageNo($librick_id,$matches[3]);
-						}
-					}
+					$newFileName = $librick_id.'_'.$matches[3].$matches[4];
+					if($numArray['max'] == 0)
+						$ItemInfoDB->AddImageNo($librick_id,$matches[3]);
 					else
 					{
-						$image_no = $numArray['max'] + 1;
-						$newFileName = $librick_id.'_'.$image_no.$matches[4];
-						$ItemInfoDB->UpdateImageNo($librick_id,$image_no);
+						if($matches[3] == 1)	//title setup
+							$ItemInfoDB->UpdateImageNo($librick_id,$matches[3],true);
+						else
+							$ItemInfoDB->UpdateImageNo($librick_id,$matches[3]);
 					}
 					rename($FILEPATH.$fileObj->originalFilename,$FILEPATH.$newFileName);
 					ConvertThumb($FILEPATH,$FILEPATH."thumb/",$newFileName);
@@ -323,14 +301,14 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					rename($FILEPATH.$newFileName,$TARGETPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb/'.$newFileName,$THUMBPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb2/'.$newFileName,$THUMBPATH2.$itemFolder.$newFileName);
-					$message.='成功。';
+					$text.='成功。';
 					if($MyGoogleDrive->DeleteFileInFolder($folderId,$fileItem->id))
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除成功。' . "\n";
 					else
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除失敗。' . "\n";
 				}
-				else $message.='失敗。';
-				echo $message."\n";
+				else $text.='失敗。';
+				echo $text."\n";
 				break;
 			case 's':	//Sets
 				$itemFolder = 'Sets/';
@@ -341,29 +319,20 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					break;
 				}
 				file_put_contents($FILEPATH.$fileObj->originalFilename,$data);
-				$message = '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 偵測到有'. $fileObj->originalFilename . '，準備更新至S3。';
+				$text = '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 偵測到有'. $fileObj->originalFilename . '，準備更新至S3。';
 				$librick_id = $matches[1] . '_' . $matches[2];
 				$numArray = $ItemInfoDB->ReadDB($librick_id);
 				if($numArray['max'] != -1)	//No Error
 				{
-					if($numArray['title'] == false)	// title no setup
-					{
-						$newFileName = $librick_id.'_'.$matches[3].$matches[4];
-						if($numArray['max'] == 0)
-							$ItemInfoDB->AddImageNo($librick_id,$matches[3]);
-						else
-						{
-							if($matches[3] == 1)	//title setup
-								$ItemInfoDB->UpdateImageNo($librick_id,$matches[3],true);
-							else
-								$ItemInfoDB->UpdateImageNo($librick_id,$matches[3]);
-						}
-					}
+					$newFileName = $librick_id.'_'.$matches[3].$matches[4];
+					if($numArray['max'] == 0)
+						$ItemInfoDB->AddImageNo($librick_id,$matches[3]);
 					else
 					{
-						$image_no = $numArray['max'] + 1;
-						$newFileName = $librick_id.'_'.$image_no.$matches[4];
-						$ItemInfoDB->UpdateImageNo($librick_id,$image_no);
+						if($matches[3] == 1)	//title setup
+							$ItemInfoDB->UpdateImageNo($librick_id,$matches[3],true);
+						else
+							$ItemInfoDB->UpdateImageNo($librick_id,$matches[3]);
 					}
 					rename($FILEPATH.$fileObj->originalFilename,$FILEPATH.$newFileName);
 					ConvertThumb($FILEPATH,$FILEPATH."thumb/",$newFileName);
@@ -371,14 +340,14 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					rename($FILEPATH.$newFileName,$TARGETPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb/'.$newFileName,$THUMBPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb2/'.$newFileName,$THUMBPATH2.$itemFolder.$newFileName);
-					$message.='成功。';
+					$text.='成功。';
 					if($MyGoogleDrive->DeleteFileInFolder($folderId,$fileItem->id))
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除成功。' . "\n";
 					else
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除失敗。' . "\n";
 				}
-				else $message.='失敗。';
-				echo $message."\n";
+				else $text.='失敗。';
+				echo $text."\n";
 				break;
 			case 'stk':	//Stickers
 				$itemFolder = 'Stickers/';
@@ -389,29 +358,20 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					break;
 				}
 				file_put_contents($FILEPATH.$fileObj->originalFilename,$data);
-				$message = '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 偵測到有'. $fileObj->originalFilename . '，準備更新至S3。';
+				$text = '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 偵測到有'. $fileObj->originalFilename . '，準備更新至S3。';
 				$librick_id = $matches[1] . '_' . $matches[2];
 				$numArray = $ItemInfoDB->ReadDB($librick_id);
 				if($numArray['max'] != -1)	//No Error
 				{
-					if($numArray['title'] == false)	// title no setup
-					{
-						$newFileName = $librick_id.'_'.$matches[3].$matches[4];
-						if($numArray['max'] == 0)
-							$ItemInfoDB->AddImageNo($librick_id,$matches[3]);
-						else
-						{
-							if($matches[3] == 1)	//title setup
-								$ItemInfoDB->UpdateImageNo($librick_id,$matches[3],true);
-							else
-								$ItemInfoDB->UpdateImageNo($librick_id,$matches[3]);
-						}
-					}
+					$newFileName = $librick_id.'_'.$matches[3].$matches[4];
+					if($numArray['max'] == 0)
+						$ItemInfoDB->AddImageNo($librick_id,$matches[3]);
 					else
 					{
-						$image_no = $numArray['max'] + 1;
-						$newFileName = $librick_id.'_'.$image_no.$matches[4];
-						$ItemInfoDB->UpdateImageNo($librick_id,$image_no);
+						if($matches[3] == 1)	//title setup
+							$ItemInfoDB->UpdateImageNo($librick_id,$matches[3],true);
+						else
+							$ItemInfoDB->UpdateImageNo($librick_id,$matches[3]);
 					}
 					rename($FILEPATH.$fileObj->originalFilename,$FILEPATH.$newFileName);
 					ConvertThumb($FILEPATH,$FILEPATH."thumb/",$newFileName);
@@ -419,17 +379,17 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					rename($FILEPATH.$newFileName,$TARGETPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb/'.$newFileName,$THUMBPATH.$itemFolder.$newFileName);
 					rename($FILEPATH.'thumb2/'.$newFileName,$THUMBPATH2.$itemFolder.$newFileName);
-					$message.='成功。';
+					$text.='成功。';
 					if($MyGoogleDrive->DeleteFileInFolder($folderId,$fileItem->id))
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除成功。' . "\n";
 					else
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除失敗。' . "\n";
 				}
-				else $message.='失敗。';
-				echo $message."\n";
+				else $text.='失敗。';
+				echo $text."\n";
 				break;
 			default:
-				$message = '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 未實作 '.$fileObj->originalFilename .' 無法執行 -> 失敗。';
+				$output .= '['.date('Y-m-d H:i:s').'] '.__METHOD__.' 未實作 '.$fileObj->originalFilename .' 無法執行 -> 失敗。';
 				if($FailedFolderID != NULL)
 				{
 					$MyGoogleDrive->RemoveFileFromFolder($folderId,$fileItem->id);
@@ -442,14 +402,13 @@ if(count($FolderArray) == 1)					# ensure the folder is only one
 					else
 						echo '['.date('Y-m-d H:i:s').'] '.__METHOD__.' '.$fileObj->originalFilename . '刪除失敗。' . "\n";
 				}
-				echo $message."\n";
 				break;
 		}	// End of Swticha
 		unset($data);
 		unset($fileObj);
 	}	// End of foreach
-	$message = '['.date('Y-m-d H:i:s').'] '.'圖片上傳批次更新已完成作業。';
-	$notify->pushNote($title,$message);
+	$output.= '['.date('Y-m-d H:i:s').'] '.'圖片上傳批次更新已完成作業。';
+	$notify->pushNote($title,$output);
 }
 else
 	echo '['.date('Y-m-d H:i:s').'] '.__METHOD__. ' 找不到目錄名 imageSync。' . "\n";
